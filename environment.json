@@ -13,8 +13,8 @@
   "timer": "time.perf_counter_ns",
   "timer_resolution_s": 1e-07,
   "power_conditions": "plugged-in, best performance",
-  "source_revision": "sha256:3b89e838e2a50d1bff635cee365f92e326adfb859f68bf68e9c8f3b1d7036f06",
+  "source_revision": "3067e0f223f6f6c02426e959f4eeef283205fd96",
   "execution": "native",
-  "source_revision_type": "content-hash",
-  "source_dirty": null
+  "source_revision_type": "git",
+  "source_dirty": false
 }
