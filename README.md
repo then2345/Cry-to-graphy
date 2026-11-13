@@ -1,6 +1,4 @@
-# AES-256-GCM vs ChaCha20-Poly1305 — Implementation & Testing (Task 3 + Task 4)
-
-Theo tài liệu *Task2_Experimental Design_Cryptography* (protocol v1).
+# AES-256-GCM vs ChaCha20-Poly1305
 
 ## Yêu cầu
 
