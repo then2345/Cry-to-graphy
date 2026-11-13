@@ -1,0 +1,20 @@
+{
+  "session_id": "S01",
+  "protocol_version": "v1",
+  "date": "2026-11-12T18:32:37",
+  "cpu": "12th Gen Intel(R) Core(TM) i5-12400F",
+  "architecture": "AMD64",
+  "aes_hardware_support": "yes",
+  "ram_gb": 17.0,
+  "os": "Windows 11 (10.0.26200)",
+  "python": "3.14.5",
+  "cryptography": "48.0.0",
+  "openssl": "OpenSSL 4.0.0 14 Apr 2026",
+  "timer": "time.perf_counter_ns",
+  "timer_resolution_s": 1e-07,
+  "power_conditions": "plugged-in, best performance",
+  "source_revision": "sha256:3b89e838e2a50d1bff635cee365f92e326adfb859f68bf68e9c8f3b1d7036f06",
+  "execution": "native",
+  "source_revision_type": "content-hash",
+  "source_dirty": null
+}

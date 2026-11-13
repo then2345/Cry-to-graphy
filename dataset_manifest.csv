@@ -1,0 +1,10 @@
+dataset_id,data_type,target_size_bytes,actual_size_bytes,filename,sha256,generation_method
+TXT01,text,1000000,1000000,datasets/TXT01.txt,40e8adbf7d96a5c5c6576dc215256d7cdb85f16f9d622a820dbf05f5e73973f8,"repeat ASCII sentence, truncate to N bytes"
+TXT05,text,5000000,5000000,datasets/TXT05.txt,501db99daa9b84bfa5eba8149f0da03b5c941480a6718215645a2b3dd3df967e,"repeat ASCII sentence, truncate to N bytes"
+TXT10,text,10000000,10000000,datasets/TXT10.txt,30a837a8dee8f3d0b7fa2cea9267556381c3366d6e8a84e690e94d08b8a03f91,"repeat ASCII sentence, truncate to N bytes"
+IMG01,image,1000000,999054,datasets/IMG01.bmp,1ea982900a13b60a080fb1463c4bcfc33b6c875695c56382bda0b37473654fc1,24-bit BMP 1000x333 deterministic RGB gradient
+IMG05,image,5000000,5001054,datasets/IMG05.bmp,dabf3842df234789a3676032247ce672bd6d843ea835c689cf98e3701c807c93,24-bit BMP 1000x1667 deterministic RGB gradient
+IMG10,image,10000000,9999054,datasets/IMG10.bmp,2e3f2658caf0f9fc5d323075e5ab05e3e1dc4edbcd61f1312839bbbc2a656b14,24-bit BMP 1000x3333 deterministic RGB gradient
+BIN01,binary,1000000,1000000,datasets/BIN01.bin,8d893c4e14a8d28d1266b044093e5c94e64c938f48ccfbffb19c6f5573e2fc0a,os.urandom(N) generated once and saved
+BIN05,binary,5000000,5000000,datasets/BIN05.bin,cc861f87cf724807f608c6bac28f244a701035a32017f6f720b967307be61f86,os.urandom(N) generated once and saved
+BIN10,binary,10000000,10000000,datasets/BIN10.bin,7b497a4cf9557c96222a8cd689203c6b55d4953ca0eba28ccdfae96221a0cacc,os.urandom(N) generated once and saved

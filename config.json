@@ -1,0 +1,31 @@
+{
+  "session_id": "S01",
+  "protocol_version": "v1",
+  "algorithms": {
+    "AES-256-GCM": "AESGCM",
+    "ChaCha20-Poly1305": "ChaCha20Poly1305"
+  },
+  "key_bits": 256,
+  "nonce_policy_check": "counters never reset within a scenario",
+  "nonce_bytes": 12,
+  "tag_bytes": 16,
+  "aad": null,
+  "units": "1 MB = 1,000,000 bytes; time in ns",
+  "dataset_order": [
+    "TXT01",
+    "TXT05",
+    "TXT10",
+    "IMG01",
+    "IMG05",
+    "IMG10",
+    "BIN01",
+    "BIN05",
+    "BIN10"
+  ],
+  "warmup_pairs": 5,
+  "measured_pairs": 30,
+  "nonce_policy": "fresh key per scenario; 12-byte big-endian counter incl. warm-ups",
+  "execution_order": "odd rounds AES first, even rounds ChaCha20 first",
+  "timing_boundary": "only encrypt()/decrypt() API calls, perf_counter_ns",
+  "output_package": "nonce || ciphertext || tag"
+}
