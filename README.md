@@ -22,7 +22,17 @@ python run_all.py --session S01 --power "plugged-in, best performance"
 - Cả hai thuật toán chạy trên **cùng một máy, cùng một lần chạy**.
 - `source_revision` được tự động lấy từ `git rev-parse HEAD` nếu repo là git; nếu chưa phải git, chương trình ghi SHA-256 của source.
 - Có thể chỉ định commit thủ công: `--revision <commit>`.
+- Số cặp warm-up và số lần đo mỗi scenario đổi được: `--warmup` (mặc định 5) và `--runs` (mặc định 30). Hai giá trị này được ghi vào `config.json` và dùng để kiểm tra số dòng.
 - Với lần chạy mới muốn BIN deterministic, thêm `--seed 20261112`; `run_all.py` sẽ sinh lại toàn bộ dataset bằng `make_datasets.py --force --seed ...` trước khi đo.
+- Pipeline **dừng với exit code 1** nếu: functional tests không đạt 90/90; `raw_measurements.csv` không đủ `18 × runs` dòng; hoặc `summary.csv` không đủ 18 dòng / số lần đo không khớp `config.json`.
+
+## Tự kiểm tra
+
+```bash
+python -m unittest -v test_metrics.py
+```
+
+Test kiểm tra round-trip + tamper của hai AEAD, overhead 28 B, nonce counter, công thức mean/SD/CI/throughput, giá trị t critical (df = 29 → 2.045, khớp S01), và tính nhất quán của bộ output hiện có (540 dòng thô, 18 dòng summary, 90/90 PASS với cấu hình mặc định).
 
 ## Vị trí kết quả
 
@@ -64,6 +74,7 @@ Thư mục `datasets/` được tạo bởi `make_datasets.py` và **không comm
 | `analyze.py` | 4 | Mean, SD, median, 95% CI, throughput → `summary.csv`, `fig_latency.png`, `fig_throughput.png` |
 | `flow_diagram.py` | 4 | Sơ đồ luồng chương trình → `fig_flow.png` |
 | `run_all.py` | — | Chạy tất cả theo đúng thứ tự |
+| `test_metrics.py` | — | Tự kiểm tra crypto, công thức thống kê và tính nhất quán output |
 | `requirements.txt` | — | Phiên bản Python/thư viện dùng cho S01 |
 
 ## Tái lập dataset

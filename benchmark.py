@@ -4,6 +4,7 @@ Task 3 Implementation. Chỉ đo đúng lời gọi encrypt()/decrypt(); chuẩn
 kiểm tra kết quả và ghi CSV đều nằm ngoài vùng đo.
 
 Chạy: python benchmark.py --manifest dataset_manifest.csv --session S01
+      python benchmark.py --session S02 --warmup 5 --runs 30   (giá trị mặc định)
 """
 import argparse
 import csv
@@ -16,7 +17,7 @@ import time
 from crypto_core import (ALGORITHM_NAMES, NONCE_SIZE, TAG_SIZE, NonceCounter,
                          make_cipher, new_key)
 
-WARMUP, RUNS = 5, 30
+DEFAULT_WARMUP, DEFAULT_RUNS = 5, 30
 ALGS = ALGORITHM_NAMES
 DATASET_ORDER = ["TXT01", "TXT05", "TXT10", "IMG01", "IMG05", "IMG10", "BIN01", "BIN05", "BIN10"]
 FIELDS = ["session_id", "protocol_version", "scenario_id", "algorithm", "dataset_id", "data_type",
@@ -39,12 +40,28 @@ def load_manifest(path):
     return out
 
 
+def require_row_count(actual, expected):
+    if actual != expected:
+        raise SystemExit(f"ERROR: {actual} rows produced, expected {expected}")
+
+
+def positive_int(text):
+    value = int(text)
+    if value < 1:
+        raise argparse.ArgumentTypeError("must be >= 1")
+    return value
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--manifest", default="dataset_manifest.csv")
     ap.add_argument("--session", required=True)
     ap.add_argument("--protocol", default="v1")
     ap.add_argument("--out", default="raw_measurements.csv")
+    ap.add_argument("--warmup", type=positive_int, default=DEFAULT_WARMUP,
+                    help=f"unmeasured warm-up pairs per scenario (default {DEFAULT_WARMUP})")
+    ap.add_argument("--runs", type=positive_int, default=DEFAULT_RUNS,
+                    help=f"measured pairs per scenario (default {DEFAULT_RUNS})")
     args = ap.parse_args()
 
     datasets = load_manifest(args.manifest)
@@ -56,15 +73,15 @@ def main():
         for name in ALGS:
             state[name] = (make_cipher(name, new_key()), NonceCounter())
 
-        # 5 cặp warm-up không đo (vẫn tiêu thụ nonce)
+        # Warm-up không đo (vẫn tiêu thụ nonce)
         for name in ALGS:
             cipher, ctr = state[name]
-            for _ in range(WARMUP):
+            for _ in range(args.warmup):
                 n = ctr.next()
                 cipher.decrypt(n, cipher.encrypt(n, data, None), None)
 
-        # 30 vòng đo; vòng lẻ AES trước, vòng chẵn ChaCha20 trước
-        for run in range(1, RUNS + 1):
+        # Các vòng đo; vòng lẻ AES trước, vòng chẵn ChaCha20 trước
+        for run in range(1, args.runs + 1):
             order = ALGS if run % 2 == 1 else ALGS[::-1]
             for pos, name in enumerate(order, start=1):
                 cipher, ctr = state[name]
@@ -97,7 +114,7 @@ def main():
         "algorithms": {"AES-256-GCM": "AESGCM", "ChaCha20-Poly1305": "ChaCha20Poly1305"},
         "key_bits": 256, "nonce_policy_check": "counters never reset within a scenario", "nonce_bytes": NONCE_SIZE, "tag_bytes": TAG_SIZE, "aad": None,
         "units": "1 MB = 1,000,000 bytes; time in ns",
-        "dataset_order": DATASET_ORDER, "warmup_pairs": WARMUP, "measured_pairs": RUNS,
+        "dataset_order": DATASET_ORDER, "warmup_pairs": args.warmup, "measured_pairs": args.runs,
         "nonce_policy": "fresh key per scenario; 12-byte big-endian counter incl. warm-ups",
         "execution_order": "odd rounds AES first, even rounds ChaCha20 first",
         "timing_boundary": "only encrypt()/decrypt() API calls, perf_counter_ns",
@@ -105,7 +122,10 @@ def main():
     }
     with open("config.json", "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)
-    print(f"{len(rows)} rows -> {args.out}" + ("" if len(rows) == 540 else "  (EXPECTED 540!)"))
+    expected_rows = len(datasets) * len(ALGS) * args.runs
+    print(f"{len(rows)} rows -> {args.out} (expected {expected_rows}: "
+          f"{len(datasets)} datasets x {len(ALGS)} algorithms x {args.runs} runs)")
+    require_row_count(len(rows), expected_rows)
 
 
 if __name__ == "__main__":
