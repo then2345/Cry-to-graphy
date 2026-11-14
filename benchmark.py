@@ -66,10 +66,13 @@ def main():
 
     datasets = load_manifest(args.manifest)
     rows = []
+    nonces_checked = 0
+    nonce_duplicates = 0
     for ds_id, dtype, data in datasets:
         B = len(data)
         # Chuẩn bị ngoài vùng đo: key mới cho từng scenario, cipher object, nonce counter
         state = {}
+        seen_nonces = {name: set() for name in ALGS}
         for name in ALGS:
             state[name] = (make_cipher(name, new_key()), NonceCounter())
 
@@ -78,6 +81,7 @@ def main():
             cipher, ctr = state[name]
             for _ in range(args.warmup):
                 n = ctr.next()
+                seen_nonces[name].add(n)
                 cipher.decrypt(n, cipher.encrypt(n, data, None), None)
 
         # Các vòng đo; vòng lẻ AES trước, vòng chẵn ChaCha20 trước
@@ -86,6 +90,7 @@ def main():
             for pos, name in enumerate(order, start=1):
                 cipher, ctr = state[name]
                 nonce = ctr.next()                       # cấp nonce trước khi đo
+                seen_nonces[name].add(nonce)
                 t0 = time.perf_counter_ns()
                 out = cipher.encrypt(nonce, data, None)
                 t1 = time.perf_counter_ns()
@@ -102,6 +107,15 @@ def main():
                     data_type=dtype, actual_size_bytes=B, run_index=run, execution_order=pos,
                     enc_ns=t1 - t0, dec_ns=t3 - t2, api_output_bytes=len(out),
                     package_bytes=package, overhead_bytes=package - B, roundtrip_ok=ok))
+        # Xác nhận nonce không lặp: mỗi key dùng đúng warmup+runs nonce, tất cả đều khác nhau
+        for name in ALGS:
+            used = state[name][1].used
+            unique = len(seen_nonces[name])
+            if used != args.warmup + args.runs or unique != used:
+                raise SystemExit(f"ERROR: {name} {ds_id} used {used} nonces "
+                                 f"({unique} unique), expected {args.warmup + args.runs}")
+            nonces_checked += unique
+            nonce_duplicates += used - unique
         print(f"{ds_id} done")
 
     with open(args.out, "w", newline="", encoding="utf-8") as f:
@@ -119,6 +133,9 @@ def main():
         "execution_order": "odd rounds AES first, even rounds ChaCha20 first",
         "timing_boundary": "only encrypt()/decrypt() API calls, perf_counter_ns",
         "output_package": "nonce || ciphertext || tag",
+        "nonce_check": {"keys": len(datasets) * len(ALGS),
+                        "nonces_per_key": args.warmup + args.runs,
+                        "total_nonces": nonces_checked, "duplicates": nonce_duplicates},
     }
     with open("config.json", "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)

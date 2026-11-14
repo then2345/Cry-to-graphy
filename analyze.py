@@ -101,18 +101,39 @@ def plot_throughput(s):
     fig, axes = plt.subplots(1, 2, figsize=(13, 4.8), sharey=True)
     order = DATASET_ORDER
     w = 0.38
+    error_bars_drawn = True
     for ax, (op, label) in zip(axes, [("enc", "Encryption"), ("dec", "Decryption")]):
         for i, alg in enumerate(ALGS):
             d = s[s.algorithm == alg].set_index("dataset_id").loc[order]
             xs = [k + (i - 0.5) * w for k in range(len(order))]
-            ax.bar(xs, d[f"{op}_MB_s"], width=w, label=alg, color=COLORS[alg])
+            mean = d[f"{op}_MB_s"]
+            # B/mean(t) chỉ đổi được thành khoảng tin cậy hữu hạn khi cận dưới CI của
+            # latency > 0; với ít lần đo, CI có thể chạm 0 và cận trên throughput là vô hạn.
+            ci_low = d[f"{op}_ci95_low_ms"]
+            if (ci_low <= 0).any():
+                bad = ", ".join(d.index[ci_low <= 0])
+                print(f"WARNING: {label} throughput error bars omitted: "
+                      f"95% CI lower latency <= 0 for {bad}")
+                error_bars_drawn = False
+                ax.bar(xs, mean, width=w, label=alg, color=COLORS[alg])
+            else:
+                mb = d["actual_size_bytes"] / 1e6
+                lo = mb / (d[f"{op}_ci95_high_ms"] / 1e3)   # throughput ứng với cận trên latency
+                hi = mb / (ci_low / 1e3)                    # throughput ứng với cận dưới latency
+                yerr = [mean - lo, hi - mean]
+                ax.bar(xs, mean, width=w, label=alg, color=COLORS[alg],
+                       yerr=yerr, capsize=3, error_kw={"elinewidth": 1})
         ax.set_xticks(range(len(order)))
         ax.set_xticklabels(order, rotation=45)
         ax.set_title(f"{label} throughput")
         ax.set_ylabel("Throughput (MB/s, 1 MB = 10^6 B)")
         ax.grid(axis="y", alpha=0.3)
-    axes[0].legend()
-    fig.tight_layout()
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=2, frameon=False)
+    fig.tight_layout(rect=(0, 0.05, 1, 0.93))
+    note = ("Error bars: throughput at the 95% CI bounds of mean latency" if error_bars_drawn
+            else "Error bars omitted where the 95% CI of mean latency includes 0")
+    fig.text(0.5, 0.015, note, ha="center", fontsize=9)
     fig.savefig("fig_throughput.png", dpi=200)
 
 

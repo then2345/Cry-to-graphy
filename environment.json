@@ -14,6 +14,7 @@
   "timer_resolution_s": 1e-07,
   "power_conditions": "plugged-in, best performance",
   "source_revision": "3067e0f223f6f6c02426e959f4eeef283205fd96",
+  "source_revision_note": "S01 executed 2026-11-12 from task3_task4.zip before the repo existed; measurement code is byte-identical to commit 3067e0f",
   "execution": "native",
   "source_revision_type": "git",
   "source_dirty": false

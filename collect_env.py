@@ -159,7 +159,7 @@ def main():
         "source_revision": revision,
         "source_revision_type": revision_type,
         "source_dirty": dirty,
-        "execution": "native (edit if running in a VM)",
+        "execution": "native",
     }
     with open("environment.json", "w", encoding="utf-8") as f:
         json.dump(env, f, indent=2, ensure_ascii=False)
